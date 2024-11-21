@@ -1,0 +1,165 @@
+<!-- 進階功能頁面 -->
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <title>進階功能</title>
+    <style>
+        body {
+            background-color: #e1f5fe;  /* 藍色背景顏色 */
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            background-color: #4b959b;
+            padding: 10px;
+        }
+
+        /* 表格樣式 */
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* 表單樣式 */
+        form {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"], .financial-analysis-button button {
+            background-color: #4b959b;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button[type="submit"]:hover, .financial-analysis-button button:hover {
+            background-color: #36787a;
+        }
+
+        a {
+            color: #4b959b;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* 財務分析按鈕容器 */
+        .financial-analysis-button {
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>進階功能</h1>
+
+    <h2>排序分類支出</h2>
+    <table class="expense-table">
+        <thead>
+            <tr>
+                <th>類別</th>
+                <th>總金額</th>
+                <th>支出佔比 (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category, total_amount, proportion in categorized_expenses %}
+            <tr>
+                <td>{{ category }}</td>
+                <td>{{ total_amount }}</td>
+                <td>{{ proportion }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>設定必要支出預算</h2>
+    <form action="/advanced" method="POST">
+        <label>類別：食，預算金額：</label>
+        <input type="number" id="budget_食" name="budget_食" step="0.01" value="{{ category_budgets.get('食', 0) }}" required>
+        <br>
+        <label>類別：衣，預算金額：</label>
+        <input type="number" id="budget_衣" name="budget_衣" step="0.01" value="{{ category_budgets.get('衣', 0) }}" required>
+        <br>
+        <label>類別：住，預算金額：</label>
+        <input type="number" id="budget_住" name="budget_住" step="0.01" value="{{ category_budgets.get('住', 0) }}" required>
+        <br>
+        <label>類別：行，預算金額：</label>
+        <input type="number" id="budget_行" name="budget_行" step="0.01" value="{{ category_budgets.get('行', 0) }}" required>
+        <br>
+        <label>類別：育，預算金額：</label>
+        <input type="number" id="budget_育" name="budget_育" step="0.01" value="{{ category_budgets.get('育', 0) }}" required>
+        <br>
+        <label>類別：樂，預算金額：</label>
+        <input type="number" id="budget_樂" name="budget_樂" step="0.01" value="{{ category_budgets.get('樂', 0) }}" required>
+        <br>
+        <button type="submit" name="set_budget">設定</button>
+    </form>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-message">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var flashMessage = document.querySelector('.flash-message');
+            if (flashMessage) {
+                flashMessage.classList.remove('hide-flash');
+                setTimeout(function() {
+                    flashMessage.classList.add('hide-flash');
+                }, 3000); // 顯示時間為3秒後自動隱藏
+            }
+        });
+    </script>
+
+    <!-- 財務分析按鈕 -->
+    <div class="financial-analysis-button">
+        <button type="button" onclick="window.location.href='/financial_analysis'">財務分析</button>
+    </div>
+
+    <a href="/expense"><h4>返回</h4></a>
+</body>
+</html>

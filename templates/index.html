@@ -1,0 +1,72 @@
+<!-- 首頁 -->
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <title>記帳網頁</title>
+    <style>
+        body {
+            background-color: #e1f5fe;  
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            background-color: #4b959b;
+            padding: 10px;
+        }
+
+        p {
+            color: #f06292;
+            font-size: 20px;
+            animation: bounce 1s infinite alternate;
+        }
+
+        .button {
+            background-color: #4b959b;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            text-transform: uppercase;
+            animation: bounce 0.5s infinite alternate;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+          }
+          
+          .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+          }
+
+        .button:hover {
+            background-color: #1976d2;
+            cursor: pointer;
+        }
+
+        .logo-image {
+            display: block;
+            margin: 0 auto;
+            max-width: 2000 px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>歡迎來到記帳網頁</h1>
+    <img class="logo-image" src="https://memeprod.sgp1.digitaloceanspaces.com/user-wtf/1590580786339.jpg" alt="Logo">
+    <div class="button-container">
+    <button class="button" onclick="location.href='/login'">登入</button>
+    <button class="button" onclick="location.href='/register'">註冊</button>
+    
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!-- 記帳頁面 -->
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <title>簡易記帳</title>
+    <style>
+        body {
+            background-color: #e1f5fe;
+            font-family: Arial, sans-serif;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            background-color: #4b959b;
+            padding: 10px;
+        }
+
+        .flash-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+        }
+
+        .flash-message p {
+            margin: 0;
+            padding: 5px 10px;
+        }
+
+        .hide-flash {
+            display: none;
+        }
+
+        .warning-message {
+            color: red;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0,0,0,0.1);
+        }
+
+        button {
+            background-color: #4b959b;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        button:hover {
+            background-color: #36787a;
+        }
+
+        .export-button {
+            margin-top: 20px;
+        }
+
+        a {
+            color: #4b959b;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        h2, h3 {
+            color: #333;
+        }
+
+        input[type="date"],
+        input[type="number"],
+        select,
+        input[type="text"] {
+            width: 200px;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .charts-container, .forecast-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .charts-container canvas,
+        .forecast-container canvas {
+            max-width: 600px;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .tag {
+            display: inline-block;
+            background-color: #4b959b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-right: 5px;
+            font-size: 12px;
+        }
+    </style>
+    <!-- 引入 Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- 引入 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>簡易記帳</h1>
+    
+    <!-- 記帳表單 -->
+    <form method="POST" action="/expense">
+        <div class="form-group">
+            <label for="date">日期:</label>
+            <input type="date" id="date" name="date">
+            <span id="date-warning" class="text-danger" style="display: none;">日期為必填欄位!請選擇日期</span>
+        </div>
+
+        <div class="form-group">
+            <label for="record_type">類型:</label>
+            <select id="record_type" name="record_type">
+                <option value="income">收入</option>
+                <option value="expense">支出</option>
+            </select>
+        </div>
+        
+        <div class="form-group" id="category_div" style="display: none;">
+            <label for="category">分類:</label>
+            <select id="category" name="category">
+                <option value="食">食</option>
+                <option value="衣">衣</option>
+                <option value="住">住</option>
+                <option value="行">行</option>
+                <option value="育">育</option>
+                <option value="樂">樂</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="note">備註:</label>
+            <input type="text" id="note" name="note" placeholder="例如：午餐, 公車費">
+        </div>
+        
+        <div class="form-group">
+            <label for="amount">金額:</label>
+            <input type="number" id="amount" name="amount" step="0.01" placeholder="輸入金額">
+            <span id="amount-warning" class="text-danger" style="display: none;">金額為必填欄位!請輸入金額</span>
+        </div>
+
+
+        <button type="submit" id="add-button">新增</button>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-message">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </form>
+
+    <br>
+    
+    <!-- 財務摘要 -->
+    <h2>月支出: {{ expense|abs }}</h2>
+    <h2>損益: {{ profit_loss }}</h2>
+
+    <!-- 記帳紀錄表格 -->
+    <h3>記帳紀錄:</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>日期</th>
+                <th>類型</th>
+                <th>分類</th>
+                <th>金額</th>
+                <th>備註</th>
+                <th>標籤</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense[5] }}</td>
+                    <td>
+                        {% if expense[3] > 0 %}
+                            收
+                        {% else %}
+                            支
+                        {% endif %}
+                    </td>
+                    <td>{{ expense[2] }}</td>
+                    <td>{{ expense[3]|abs }}</td>
+                    <td>{{ expense[4] }}</td>
+                    <td>
+                        {% if expense[6] %}
+                            {% for tag in expense[6].split(',') %}
+                                <span class="tag">{{ tag }}</span>
+                            {% endfor %}
+                        {% else %}
+                            無
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button type="button" onclick="editExpense({{ expense[0] }})">編輯</button>
+                        <button type="button" onclick="deleteExpense({{ expense[0] }})">刪除</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button type="button" class="export-button" onclick="exportToExcel()">匯出 Excel</button>
+        
+    <script>
+        function editExpense(expenseId) {
+            window.location.href = "/edit_expense/" + expenseId;
+        }
+    </script>
+    
+    <script>
+        function exportToExcel() {
+            window.location.href = "/export";
+        }
+    </script>
+
+    <script>
+        function deleteExpense(expenseId) {
+            if (confirm("確定要刪除該筆記帳紀錄嗎？")) {
+                // 提交表單到 `/delete_expense/<expense_id>` 路由
+                var form = document.createElement("form");
+                form.method = "POST";
+                form.action = "/delete_expense/" + expenseId;
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+
+    <script>
+        // 收或支，顯示或隱藏種類選項
+        var recordTypeSelect = document.getElementById("record_type");
+        var categoryDiv = document.getElementById("category_div");
+
+        recordTypeSelect.addEventListener("change", function() {
+            if (recordTypeSelect.value === "expense") {
+                categoryDiv.style.display = "block";
+            } else {
+                categoryDiv.style.display = "none";
+            }
+        });
+
+        // Flash message 自動隱藏
+        document.addEventListener('DOMContentLoaded', function() {
+            var flashMessage = document.querySelector('.flash-message');
+            if (flashMessage) {
+                flashMessage.classList.remove('hide-flash');
+                setTimeout(function() {
+                    flashMessage.classList.add('hide-flash');
+                }, 3000); // 顯示時間為3秒後自動隱藏
+            }
+        });
+    </script>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(event) {
+            var dateInput = document.getElementById('date');
+            var amountInput = document.getElementById('amount');
+            var dateWarning = document.getElementById('date-warning');
+            var amountWarning = document.getElementById('amount-warning');
+
+            var isValid = true;
+
+            if (!dateInput.value) {
+                dateWarning.style.display = 'block';
+                dateWarning.classList.add('warning-message'); // 新增 'warning-message' 類別
+                isValid = false;
+            } else {
+                dateWarning.style.display = 'none';
+                dateWarning.classList.remove('warning-message'); // 移除 'warning-message' 類別
+            }
+
+            if (!amountInput.value) {
+                amountWarning.style.display = 'block';
+                amountWarning.classList.add('warning-message'); 
+                isValid = false;
+            } else {
+                amountWarning.style.display = 'none';
+                amountWarning.classList.remove('warning-message');
+            }
+
+            if (!isValid) {
+                event.preventDefault(); // 阻止表單的預設提交行為
+            }
+        });
+    </script>
+
+    <!-- 初始化 Select2 -->
+    <script>
+        $(document).ready(function() {
+            $('#tags').select2({
+                placeholder: "選擇標籤",
+                allowClear: true
+            });
+
+            $('#filter_tags').select2({
+                placeholder: "選擇標籤進行過濾",
+                allowClear: true
+            });
+        });
+    </script>
+
+    <a href="/advanced"><h3>進階功能</h3></a>
+    <a href="/logout"><h6>登出</h6></a>
+</body>
+</html>

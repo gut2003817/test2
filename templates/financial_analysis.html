@@ -1,0 +1,244 @@
+<!-- 財務分析頁面 -->
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <title>財務分析</title>
+    <style>
+        body {
+            background-color: #e1f5fe;
+            font-family: Arial, sans-serif;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            background-color: #4b959b;
+            padding: 10px;
+        }
+
+        /* 按鈕樣式 */
+        .analysis-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .analysis-buttons button {
+            background-color: #4b959b;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .analysis-buttons button:hover {
+            background-color: #36787a;
+        }
+
+        /* 圖表容器樣式 */
+        .chart-container {
+            display: none;
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        .chart-container.active {
+            display: block;
+        }
+
+        /* 新增：調整支出類別分佈圓餅圖的大小 */
+        #categoryChart {
+            max-width: 400px; /* 調整為所需的最大寬度 */
+            margin: 20px auto; /* 居中對齊 */
+        }
+
+        #categoryPieChart {
+            width: 100% !important;
+            height: 400px !important; /* 調整為所需的高度 */
+        }
+
+        /* 其他圖表保持原來的尺寸 */
+        #monthlyLineChart, #forecastBarChart {
+            width: 100% !important;
+            height: 400px !important;
+        }
+
+        canvas {
+            width: 100% !important;
+            max-width: 800px;
+            height: auto !important;
+        }
+    </style>
+    <!-- 引入 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>財務分析</h1>
+    
+    <!-- 分析選擇按鈕 -->
+    <div class="analysis-buttons">
+        <button onclick="showChart('categoryChart')">支出類別分佈</button>
+        <button onclick="showChart('monthlyChart')">每月支出趨勢</button>
+        <button onclick="showChart('forecastChart')">未來 3 個月支出預測</button>
+    </div>
+    
+    <!-- 支出類別分佈圖表 -->
+    <div id="categoryChart" class="chart-container active">
+        <h2>支出類別分佈</h2>
+        <canvas id="categoryPieChart"></canvas>
+    </div>
+    
+    <!-- 每月支出趨勢圖表 -->
+    <div id="monthlyChart" class="chart-container">
+        <h2>每月支出趨勢</h2>
+        <canvas id="monthlyLineChart"></canvas>
+    </div>
+    
+    <!-- 未來 3 個月支出預測圖表 -->
+    <div id="forecastChart" class="chart-container">
+        <h2>未來 3 個月支出預測</h2>
+        <canvas id="forecastBarChart"></canvas>
+    </div>
+    
+    <script>
+        // 顯示選擇的圖表
+        function showChart(chartId) {
+            var containers = document.querySelectorAll('.chart-container');
+            containers.forEach(function(container) {
+                container.classList.remove('active');
+            });
+            document.getElementById(chartId).classList.add('active');
+        }
+        
+        // 畫圖表
+        document.addEventListener('DOMContentLoaded', function() {
+            // 支出類別分佈圖表
+            const categoryCtx = document.getElementById('categoryPieChart').getContext('2d');
+            const categoryChart = new Chart(categoryCtx, {
+                type: 'pie',
+                data: {
+                    labels: {{ categories|tojson }},
+                    datasets: [{
+                        data: {{ category_amounts|tojson }},
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 159, 64, 0.6)',
+                            'rgba(199, 199, 199, 0.6)',
+                            'rgba(83, 102, 255, 0.6)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: false,
+                            text: '支出類別分佈'
+                        }
+                    }
+                }
+            });
+
+            // 每月支出趨勢圖表
+            const monthlyCtx = document.getElementById('monthlyLineChart').getContext('2d');
+            const monthlyChart = new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ months|tojson }},
+                    datasets: [{
+                        label: '每月支出',
+                        data: {{ monthly_amounts|tojson }},
+                        backgroundColor: 'rgba(54, 162, 235, 0.4)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '金額'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '月份'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: false,
+                            text: '每月支出趨勢'
+                        }
+                    }
+                }
+            });
+
+            // 預測支出圖表
+            const forecastCtx = document.getElementById('forecastBarChart').getContext('2d');
+            const forecastChart = new Chart(forecastCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ prediction_months|tojson }},
+                    datasets: [{
+                        label: '預測支出',
+                        data: {{ prediction_amounts|tojson }},
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '金額'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '月份'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: false,
+                            text: '未來支出預測'
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    <a href="/advanced"><h4>返回進階功能</h4></a>
+</body>
+</html>

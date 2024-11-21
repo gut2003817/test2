@@ -1,0 +1,72 @@
+<!-- 註冊頁面 -->
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <title>註冊</title>
+    <style>
+        body {
+            background-color: #e1f5fe;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            background-color: #4b959b;
+            padding: 10px;
+        }
+
+        form {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #4b959b;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 200px;
+            padding: 5px;
+            font-size: 16px;
+            border: 1px solid #4b959b;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"] {
+            background-color: #4b959b;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <h1>註冊</h1>
+    <form action="/register" method="post">
+        <label for="username">帳號:</label>
+        <input type="text" id="username" name="username"><br>
+        <label for="password">密碼:</label>
+        <input type="password" id="password" name="password"><br>
+        <input type="submit" name="submit" value="註冊">
+        {% if message %}
+        <p>{{ message }}</p>
+        {% endif %}
+    <h5>註冊過了嗎？<a href="/login">前往登入</a></h5>
+    </form>
+</body>
+</html>
